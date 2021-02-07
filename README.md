@@ -1,62 +1,82 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+## Installation
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The default installation instructions are as following, if your environment supports [Laravel Sail](https://laravel.com/docs/8.x/sail) please move to the next step.
 
-## About Laravel
+```bash
+    composer install
+    composer run post-root-package-install
+    composer run post-create-project-cmd
+    
+    npm install
+    npm run dev
+    
+    php artisan migrate --seed
+    php artisan serve
+```
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+I added [Laravel Sail](https://laravel.com/docs/8.x/sail) in favor of a faster setup. If you have Docker,
+you'll need to stop your running database and web servers, then run
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+  ./vendor/bin/sail up
+  ./vendor/bin/sail artisan migrate --seed
+ 
+  ./vendor/bin/sail npm install
+  ./vendor/bin/sail npm run dev
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Now you should be able to access the website at `http://localhost`.
 
-## Learning Laravel
+If you don't have Laravel Sail, you will need a database named `blogtest`, and have a running Redis server, or you can switch the driver to any other cache service installed in your environment.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Import Feature
 
-## Laravel Sponsors
+You can import posts from the feed API by running:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+```bash
+    php artisan feed:import
+```
 
-### Premium Partners
+### Task Schedule
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/)**
-- **[OP.GG](https://op.gg)**
+The import command is ran by Laravel's task scheduler every 5 minutes, you can change this number in the environment
+file or in the ``config/post.php`` configuration file. In order to run Laravel's task scheduler, you have two options:
 
-## Contributing
+- Add this cron entry: ``* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1``
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Run the scheduler in the background: ``php artisan schedule:work``
 
-## Code of Conduct
+## Takeaways
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Cache Strategy
 
-## Security Vulnerabilities
+The case scenario mentions that the website expects to receive millions of visitors each month, and we need to minimize the strain put on our system and at the feed API whenever we can. There are many ways to approach this, however after analyzing the scenario for a while I concluded that, considering there are 2-3 new posts each hour, and we have no way to know immediately when there is a new post, the best solution is to use an interval between each import.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Ideally, we should calculate a median interval between posts publications date, but I came up with a reasonable number -namely, 5 minutes-, based on the fact it may take up to 20-30 minutes between posts, and we don't want to keep the data outdated for too long. However, it's kind of an arbitrary number, so if 5 minutes seems too long it can be lowered without issues.
+
+The cache is automatically invalidated when a Post is created or updated, whether it was made by an user or it was created by the import process.
+
+Another comment I wanted to leave here: in this case scenario, a package like [laravel-model-caching](https://github.com/GeneaLabs/laravel-model-caching) would have sufficed. However, I assumed that you wanted to test if I could introduce a caching pattern, so I discarded that package.
+
+### Setup Decisions
+
+I decided to move forward with Laravel Breeze in order to scaffold the authentication system and allow me to focus on more important objectives. It is worthy to mention that in other scenario I might have made a REST API with Laravel consumed by a React application.
+
+
+## Testing
+
+You can run the tests by performing the following command:
+
+```bash
+php artisan test
+```
+
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+[MIT license](https://opensource.org/licenses/MIT)
+
+## Author
+
+- Mauricio Villalobos

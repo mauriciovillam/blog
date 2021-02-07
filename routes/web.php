@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\CreatePostController;
+use App\Http\Controllers\StorePostController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,12 +17,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', HomeController::class)->name('home');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/dashboard/post', CreatePostController::class)->name('post.create');
+    Route::post('/dashboard/post', StorePostController::class)->name('post.store');
+});
 
 require __DIR__.'/auth.php';

@@ -1,0 +1,20 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use Tests\TestCase;
+
+class DashboardTest extends TestCase
+{
+    public function test_dashboard_screen_can_be_rendered()
+    {
+        $this->actingAs(User::factory()->create());
+        $this->get('/dashboard')->assertStatus(200);
+    }
+
+    public function test_dashboard_screen_cant_be_rendered_as_guest()
+    {
+        $this->get('/dashboard')->assertStatus(302);
+    }
+}

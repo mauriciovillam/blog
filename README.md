@@ -1,34 +1,43 @@
 ## Installation
 
-The default installation instructions are as following, if your environment supports [Laravel Sail](https://laravel.com/docs/8.x/sail) please move to the next step.
+### Laravel Sail
+
+I added [Laravel Sail](https://laravel.com/docs/8.x/sail) in favor of a faster setup. You'll need to stop your running database and web servers with conflicting ports, then run:
 
 ```bash
-    composer install
-    composer run post-root-package-install
-    composer run post-create-project-cmd
-    
-    npm install
-    npm run dev
-    
-    php artisan migrate --seed
-    php artisan serve
+composer install
+composer run post-root-package-install
+composer run post-create-project-cmd
+./vendor/bin/sail up -d
+
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run dev
+
+sleep 60s # The MySQL service may need a minute or so to start 
+./vendor/bin/sail artisan migrate --seed
 ```
 
-I added [Laravel Sail](https://laravel.com/docs/8.x/sail) in favor of a faster setup. If you have Docker,
-you'll need to stop your running database and web servers, then run
+Now you should be able to access the website at `http://localhost/`.
+
+### Manual Setup
+
+If you don't have Laravel Sail, you will need to configure the ``MYSQL_HOST`` and ``REDIS_HOST`` to ``127.0.0.1`` in the ``.env`` file. Also, you'll need to create a database named ``blogtest`` and a running Redis server or any other cache driver you wish to configure.
 
 ```bash
-  ./vendor/bin/sail up
-  ./vendor/bin/sail artisan migrate --seed
- 
-  ./vendor/bin/sail npm install
-  ./vendor/bin/sail npm run dev
+composer install
+composer run post-root-package-install
+composer run post-create-project-cmd
+
+npm install
+npm run dev
+
+php artisan migrate --seed
+php artisan serve
 ```
 
-Now you should be able to access the website at `http://localhost`.
+## Using the application
 
-If you don't have Laravel Sail, you will need a database named `blogtest`, and have a running Redis server, or you can switch the driver to any other cache service installed in your environment.
-
+You can log in with the email ``admin@blog.com`` and password ``password``. 
 
 ## Import Feature
 
@@ -47,6 +56,12 @@ file or in the ``config/post.php`` configuration file. In order to run Laravel's
 
 - Run the scheduler in the background: ``php artisan schedule:work``
 
+### Flow chart
+
+I put together a diagram in order to illustrate how this process works, and give you a general idea of what's going on.
+
+![alt text](https://github.com/mauriciovillam/blog/blob/master/importer-diagram.png?raw=true)
+
 ## Takeaways
 
 ### Cache Strategy
@@ -62,7 +77,6 @@ Another comment I wanted to leave here: in this case scenario, a package like [l
 ### Setup Decisions
 
 I decided to move forward with Laravel Breeze in order to scaffold the authentication system and allow me to focus on more important objectives. It is worthy to mention that in other scenario I might have made a REST API with Laravel consumed by a React application.
-
 
 ## Testing
 
